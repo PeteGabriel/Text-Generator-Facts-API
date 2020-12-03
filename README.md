@@ -1,1 +1,3 @@
-mkt_text_generator
+#Text generator facts API
+
+Search for random text, compile some facts about it and respond with'em.
