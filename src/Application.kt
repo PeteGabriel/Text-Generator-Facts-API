@@ -1,6 +1,7 @@
 package com.mkt.task
 
 import com.mkt.task.controllers.TextController
+import com.mkt.task.controllers.errors.Problem
 import com.mkt.task.domain.TextDataService
 import io.ktor.application.*
 import io.ktor.response.*
@@ -15,7 +16,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 @Suppress("unused")
 @kotlin.jvm.JvmOverloads
-fun Application.module(testing: Boolean = false) {
+fun Application.module() {
     install(CallLogging) {
         level = Level.INFO
         filter { call -> call.request.path().startsWith("/") }
@@ -32,20 +33,13 @@ fun Application.module(testing: Boolean = false) {
     routing {
         get("/text") {
             try{
-                //assign default values
-                val pStart = call.request.queryParameters["pStart"]?.toInt() ?: 1
-                val pEnd = call.request.queryParameters["pEnd"]?.toInt() ?: 1
-                val wordCountMin = call.request.queryParameters["wCountMin"]?.toInt() ?: 1
-                val wordCountMax = call.request.queryParameters["wCountMax"]?.toInt() ?: 1
 
-                //TODO validate accepted values for query parameters
+                call.respond(ctrl.getTextData(call.parameters))
 
-                call.respond(ctrl.getTextData(pStart, pEnd, wordCountMin, wordCountMax))
-            }catch(nfe: NumberFormatException){
-                //log
-                log.warn(nfe.toString())
-                //Bad request
-                call.respond(HttpStatusCode.BadRequest, "invalid parameters")
+            }catch(e: Problem){
+                log.warn(e.detail)
+                //call.response.header("Content-Type", "application/problem+json")
+                call.respond(status=e.status, e)
             }
         }
 
@@ -54,4 +48,3 @@ fun Application.module(testing: Boolean = false) {
         }
     }
 }
-
